@@ -1,0 +1,551 @@
+diff --git a/package-lock.json b/package-lock.json
+index a948a9c..59b05f9 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -11764,6 +11764,24 @@
+       "resolved": "https://registry.npmjs.org/react-lifecycles-compat/-/react-lifecycles-compat-3.0.4.tgz",
+       "integrity": "sha512-fBASbA6LnOU9dOU2eW7aQ8xmYBSXUIWr+UmF9b1efZBazGNO+rcXT/icdKnYm2pTwcRylVUYwW7H1PHfLekVzA=="
+     },
++    "react-notifications": {
++      "version": "1.7.2",
++      "resolved": "https://registry.npmjs.org/react-notifications/-/react-notifications-1.7.2.tgz",
++      "integrity": "sha512-3mlMiNLDQtp64IP+EnYx3xgmbdpzrLQiSO8AP+8o4LiYQC6HcgdVB+MMdGuYZ1ttfKeLgTgol2ESFQJhmz0O3Q==",
++      "requires": {
++        "acorn": "6.4.1",
++        "classnames": "^2.1.1",
++        "prop-types": "^15.5.10",
++        "react-transition-group": "^4.4.1"
++      },
++      "dependencies": {
++        "acorn": {
++          "version": "6.4.1",
++          "resolved": "https://registry.npmjs.org/acorn/-/acorn-6.4.1.tgz",
++          "integrity": "sha512-ZVA9k326Nwrj3Cj9jlh3wGFutC2ZornPNARZwsNYqQYgN0EsV2d53w5RN/co65Ohn4sUAUtb1rSUAOD6XN9idA=="
++        }
++      }
++    },
+     "react-onclickoutside": {
+       "version": "6.10.0",
+       "resolved": "https://registry.npmjs.org/react-onclickoutside/-/react-onclickoutside-6.10.0.tgz",
+diff --git a/package.json b/package.json
+index b37ba52..dbbe39c 100644
+--- a/package.json
++++ b/package.json
+@@ -17,6 +17,7 @@
+     "react-bootstrap": "^1.3.0",
+     "react-datepicker": "^3.7.0",
+     "react-dom": "^16.13.1",
++    "react-notifications": "^1.7.2",
+     "react-router-dom": "^5.2.0",
+     "react-scripts": "3.4.3",
+     "react-select": "^4.3.0",
+diff --git a/src/components/Home.js b/src/components/Home.js
+index cdd7f4a..77e69c3 100644
+--- a/src/components/Home.js
++++ b/src/components/Home.js
+@@ -33,7 +33,7 @@ export default function Home() {
+             <footer>
+               <ul>
+                 <li className="btn_1">
+-                  <Nav.Link as={Link} to="/timeslot">
++                  <Nav.Link as={Link} to="/TurfList">
+                     Book Now
+                   </Nav.Link>
+                 </li>
+diff --git a/src/components/TimeSlot.js b/src/components/TimeSlot.js
+index 78bf521..2f80853 100644
+--- a/src/components/TimeSlot.js
++++ b/src/components/TimeSlot.js
+@@ -6,78 +6,118 @@ import firebase from "firebase";
+ import DatePicker from "react-datepicker";
+ import "react-datepicker/dist/react-datepicker.css";
+ import moment from "moment";
++import 'react-notifications/lib/notifications.css';
++import {NotificationContainer, NotificationManager} from 'react-notifications';
+ 
+ export default class TimeSlot extends Component {
+   constructor(props) {
+     super(props);
+ 
+     this.state = {
+-      TurfType: "turf1",
+       isReload: false,
+       selectedDate: new Date(),
++      isButtonDisabled:false,
++      individuals:"1",
+     };
+ 
+-    const ButtonComponent = (
+-      <Button variant="primary" onClick={this.handleBooking}>
+-        Book
+-      </Button>
+-    );
+-
++    this.options = [{
++      value: '1',
++      label: '1'
++    }, {
++      value: '2',
++      label: '2'
++    }, {
++      value: '3',
++      label: '3'
++    }, {
++      value: '4',
++      label: '4'
++    }, {
++      value: '5',
++      label: '5'
++    },{
++      value: '6',
++      label: '6'
++    }, {
++      value: '7',
++      label: '7'
++    }, {
++      value: '8',
++      label: '8'
++    }, {
++      value: '9',
++      label: '9'
++    }, {
++      value: '10',
++      label: '10'
++    }];
++    
+     this.turfData = [
+       {
+         TimeSlot: "08:00 - 09:00",
++        Individuals:this.turfComponent(),
+         Status: "Available",
+-        Action: ButtonComponent,
++        Action: this.ButtonComponent(),
+       },
+       {
+         TimeSlot: "09:00 - 10:00",
++        Individuals:this.turfComponent(),
+         Status: "Available",
+-        Action: ButtonComponent,
++        Action: this.ButtonComponent(),
+       },
+       {
+         TimeSlot: "10:00 - 11:00",
++        Individuals:this.turfComponent(),
+         Status: "Available",
+-        Action: ButtonComponent,
++        Action: this.ButtonComponent(),
+       },
+       {
+         TimeSlot: "11:00 - 12:00",
++        Individuals:this.turfComponent(),
+         Status: "Available",
+-        Action: ButtonComponent,
++        Action: this.ButtonComponent(),
+       },
+       {
+         TimeSlot: "12:00 - 13:00",
++        Individuals:this.turfComponent(),
+         Status: "Available",
+-        Action: ButtonComponent,
++        Action: this.ButtonComponent(),
+       },
+       {
+         TimeSlot: "13:00 - 14:00",
++        Individuals:this.turfComponent(),
+         Status: "Available",
+-        Action: ButtonComponent,
++        Action: this.ButtonComponent(),
+       },
+       {
+         TimeSlot: "14:00 - 15:00",
++        Individuals:this.turfComponent(),
+         Status: "Available",
+-        Action: ButtonComponent,
++        Action: this.ButtonComponent(),
+       },
+       {
+         TimeSlot: "15:00 - 16:00",
++        Individuals:this.turfComponent(),
+         Status: "Available",
+-        Action: ButtonComponent,
++        Action: this.ButtonComponent(),
+       },
+       {
+         TimeSlot: "16:00 - 17:00",
++        Individuals:this.turfComponent(),
+         Status: "Available",
+-        Action: ButtonComponent,
++        Action: this.ButtonComponent(),
+       },
+       {
+         TimeSlot: "17:00 - 18:00",
++        Individuals:this.turfComponent(),
+         Status: "Available",
+-        Action: ButtonComponent,
++        Action: this.ButtonComponent(),
+       },
+       {
+         TimeSlot: "18:00 - 19:00",
++        Individuals:this.turfComponent(),
+         Status: "Available",
+-        Action: ButtonComponent,
++        Action: this.ButtonComponent(),
+       },
+     ];
+   }
+@@ -88,43 +128,77 @@ export default class TimeSlot extends Component {
+     });
+   };
+ 
++  ButtonComponent = (status, showCancelButton=false) => { 
++    return(
++      <div>
++      <Button className="pull-left" variant="primary" onClick={this.handleBooking} disabled={status && status === "Already Booked" ? true : false}>
++        Book
++      </Button>
++      {showCancelButton ? <Button variant="primary" onClick={this.handleCancelClick} >
++        Cancel
++      </Button> : null}
++      </div>
++    );
++  }
++
++  turfComponent = (isbooked=false, individuals) =>{       
++   return( <div><Select
++        defaultValue={{value: '1',label: '1'}} 
++        value={(isbooked===true && individuals) ? individuals : this.state.individuals.value}
++        onChange={this.onTurfChange}
++        options={this.options}
++        isDisabled={isbooked}
++     /></div>)
++}
+   handleBooking = (e, data) => {
+-    console.log(e);
+     const timeslot =
+-      e.target.parentElement.parentElement.firstElementChild.innerText;
++      e.target.parentElement.parentElement.parentElement.firstElementChild.innerText;
+     this.initializeBooking(timeslot, "Booked");
+   };
+ 
+   initializeBooking = (timeslot, Status) => {
+     firebase
+       .database()
+-      .ref(moment(this.state.selectedDate).format("DD/MM/YYYY") + timeslot)
++      .ref(moment(this.state.selectedDate).format("DD/MM/YYYY") + timeslot + this.props.turfName)
+       .set({
+         timeslot: timeslot,
+         Status: Status,
++        userEmail : this.props.userEmail,
++        individuals : this.state.individuals
+       });
++      NotificationManager.success('Slot Booked Successfully', 'Success');
+     this.getBookingDetails(timeslot);
+   };
+ 
+   getBookingDetails = (timeslot, selectedDate) => {
++    const that = this;
+     firebase
+       .database()
+-      .ref(moment(this.state.selectedDate).format("DD/MM/YYYY") + timeslot)
++      .ref(moment(this.state.selectedDate).format("DD/MM/YYYY") + timeslot + this.props.turfName)
+       .on("value", (snapshot) => {
+-        console.log("FireB ", snapshot);
+         if (snapshot && snapshot.exists()) {
+           const data = snapshot.val();
+           this.turfData.map((d) => {
+-            console.log(d.Status);
+ 
+             if (data.timeslot == d.TimeSlot) {
++              const showCancelButton = data.userEmail === that.props.userEmail;
+               d.Status = "Already Booked";
+-              console.log(d.Status);
++              d.Action = that.ButtonComponent(d.Status, showCancelButton);
++              d.Individuals = that.turfComponent(true,data.individuals);
+             }
+           });
+           this.renderAgain();
++        }else{
++          this.turfData.map((d)=>{
++            if(timeslot === d.TimeSlot){
++              d.Status = "Available"
++              d.Action = that.ButtonComponent(d.Status);
++              d.Individuals = that.turfComponent();
++            }
++          })
+         }
+       });
++      this.renderAgain();
+   };
+ 
+   renderAgain = () => {
+@@ -132,8 +206,11 @@ export default class TimeSlot extends Component {
+   };
+ 
+   handleDateChange = (value) => {
++    const that = this;
+     this.turfData.map((d) => {
+       d.Status = "Available";
++      d.Action = that.ButtonComponent();
++      d.Individuals = that.turfComponent();
+     });
+     this.setState(
+       {
+@@ -147,14 +224,44 @@ export default class TimeSlot extends Component {
+     );
+   };
+ 
++  handleCancelClick = (e, data) => {
++    const timeslot =
++      e.target.parentElement.parentElement.parentElement.firstElementChild.innerText;
++    this.cancelBooking(timeslot);
++  };
++
++  cancelBooking = (timeslot, Status) => {
++    firebase
++      .database()
++      .ref(moment(this.state.selectedDate).format("DD/MM/YYYY") + timeslot + this.props.turfName)
++      .remove();
++    this.getBookingDetails(timeslot);
++  };
++
++  onTurfChange = (value) => {
++    const that = this;
++    this.turfData.map((d) => {
++      d.Individuals = that.turfComponent();
++    });
++    // let timeslot;
++    // this.turfData.map((d) => {
++    //   console.log(d.TimeSlot);
++    //   timeslot = d.TimeSlot;
++    //   that.getBookingDetails(timeslot, value.label);
++    // })
++    // for (let x in this.turfData) {
++    //        that.getBookingDetails(this.turfData[x].Timeslot,value.label);
++    //   }
++    this.setState({
++      individuals: value
++    });
++  }
++
+   render() {
+     return (
+       <div>
+-
+-        <div class="pull-left" style={{ width: "80%", float: "left" }}>
+-          <Table className="table" id="table" data={this.turfData}></Table>
+-        </div>
+-        <div>
++          <div>
++          Select date: <br/>
+           <DatePicker
+             selected={this.state.selectedDate}
+             onChange={this.handleDateChange} //only when value has changed
+@@ -162,6 +269,10 @@ export default class TimeSlot extends Component {
+             dateFormat={"dd/MM/yyyy"}
+           />
+         </div>
++        <div class="pull-left" style={{ width: "80%", float: "left" }}>
++          <Table className="table" id="table" data={this.turfData}></Table>
++        </div>
++        <NotificationContainer/>
+       </div>
+     );
+   }
+diff --git a/src/components/TurfDetails.js b/src/components/TurfDetails.js
+index 70e0637..3b742ab 100644
+--- a/src/components/TurfDetails.js
++++ b/src/components/TurfDetails.js
+@@ -1,24 +1,45 @@
+-import React from "react";
++import React ,{Component} from "react";
++import { Button, Container, Row,Col } from "react-bootstrap";
++import TimeSlot from "./TimeSlot";
+ 
+-function TurfDetails({ mainImg, name, location }) {
++export default class TurfDetails extends Component {
++componentWillMount(){
++this.handleBackBrowserClick();
++}
++
++handleBackBrowserClick =() =>{
++  window.history.pushState(null, null, '');
++  window.addEventListener('popstate', function(event) {
++    window.location.assign("/TurfList");
++});
++}
++  render(){
+   return (
+     <div>
+-      <div>
+-        <h2>{name}</h2>
+-        <img width="400px" src={mainImg} alt="bg4" />
+-        <p>
+-          <b>Rules : </b> <br>- NO SMOKING</br>
+-          <br>- NO ALCOHOL CONSUMPTION</br>
+-          <br>
+-            - PLEASE MAINTAIN SOCIAL DISTANCING WHILE WAITING FOR THE GROUND OR
+-            AT THE END OF YOUR GAME
+-          </br>
+-          <br>ONLY FOOTBALL BOOKINGS ARE ALLOWED FROM 9pm to 10pm.</br>
+-          <br>There are no reviews for this venue.</br>
+-        </p>
+-      </div>
++        <Row>
++          <Col md={6}>
++            <div>
++              <h2>{this.props.turfDetails.name}</h2>
++              <img width="400px" src={this.props.turfDetails.mainImg} alt="bg4" />
++      {        <p>
++                <b>Rules : </b> <br/>- NO SMOKING<br/>
++                <br/>- NO ALCOHOL CONSUMPTION<br/>
++                <br/>
++                  - PLEASE MAINTAIN SOCIAL DISTANCING WHILE WAITING FOR THE GROUND OR
++                  AT THE END OF YOUR GAME
++                <br/>
++                <br/>ONLY FOOTBALL BOOKINGS ARE ALLOWED FROM 9pm to 10pm.<br/>
++                <br/>There are no reviews for this venue.<br/>
++              </p>}
++            </div>
++    
++          </Col>
++          <Col md={6}>
++            <TimeSlot turfName={this.props.turfDetails.name} userEmail={this.props.userEmail}/>
++          </Col>
++        </Row>
++
+     </div>
+   );
+ }
+-
+-export default TurfDetails;
++}
+\ No newline at end of file
+diff --git a/src/components/TurfLIst.js b/src/components/TurfLIst.js
+index bf70c03..7293bf9 100644
+--- a/src/components/TurfLIst.js
++++ b/src/components/TurfLIst.js
+@@ -1,34 +1,70 @@
+-import React from "react";
++import React, {Component} from "react";
+ import turfImg from "./../images/Background4.jpg";
+ import turfImg1 from "./../images/Background3.jpg";
+ import turfImg2 from "./../images/Background2.jpg";
+ import { Button, Container, Row,Col } from "react-bootstrap";
+ import "./Home.css";
+ import TurfListMain from "./TurfListMain";
++import TurfDetails from "./TurfDetails";
++import {useAuth } from "../contexts/AuthContext";
+ 
+-function TurfLIst() {
++// function GetcurrentUser() {
++//   currentUser = useAuth().currentUser;
++//   let email = currentUser.email;
++//   console.log("email",email);
++//   console.log("user",currentUser);
++// }
++
++const CustomFilterUser = ({children}) => {
++  const currentUser = useAuth().currentUser;
++  return children(currentUser);
++}
++export default class TurfList extends Component {
++  constructor(props) {
++    super(props);
++
++    this.state = {
++      showBookingView:false
++    }
++  };
++  
++  handleViewClick = (mainImg, name, location) =>{
++    this.turfDetails = {
++      mainImg:mainImg,
++      name:name,
++      location:location
++    }
++    this.setState({
++      showBookingView:true
++    });
++  }
++  render(){
+   return (
++    this.state.showBookingView ?
++    <CustomFilterUser>
++    {(currentUser)=><TurfDetails turfDetails={this.turfDetails} userEmail={currentUser && currentUser.email ? currentUser.email : null}/>}
++    </CustomFilterUser>
++    :
+     <div>
+       <Container>
+         <Row>
+           <Col md={6}>
+-            <TurfListMain name="Nerul" mainImg={turfImg} location="Nerul" />
++            <TurfListMain name="Nerul" mainImg={turfImg} location="Nerul" handleViewClick={this.handleViewClick}/>
+           </Col>
+           <Col md={6}>
+-            <TurfListMain name="Thane" mainImg={turfImg1} location="Nerul" />
++            <TurfListMain name="Thane" mainImg={turfImg1} location="Nerul" handleViewClick={this.handleViewClick}/>
+           </Col>
+         </Row>
+         <Row>
+           <Col md={6}>
+-            <TurfListMain name="Dadar" mainImg={turfImg2} location="Nerul" />
++            <TurfListMain name="Dadar" mainImg={turfImg2} location="Nerul" handleViewClick={this.handleViewClick}/>
+           </Col>
+           <Col md={6}>
+-            <TurfListMain name="Dadar" mainImg={turfImg} location="Nerul" />
++            <TurfListMain name="Andheri" mainImg={turfImg} location="Nerul" handleViewClick={this.handleViewClick}/>
+           </Col>
+         </Row>
+       </Container>
+     </div>
+   );
+-}
+-
+-export default TurfLIst;
++  }
++}
+\ No newline at end of file
+diff --git a/src/components/TurfListMain.js b/src/components/TurfListMain.js
+index 244085c..8fa7e7b 100644
+--- a/src/components/TurfListMain.js
++++ b/src/components/TurfListMain.js
+@@ -1,19 +1,21 @@
+-import React from "react";
+-import { Button } from "react-bootstrap";
++import React, {Component} from "react";
++import { Button, Container, Row,Col } from "react-bootstrap";
+ 
+-function TurfListMain({ mainImg, name, location }) {
+-  return (
+-    <div>
+-      <div className="Turf">
+-        <h2>{name}</h2>
+-        <img width="400px" src={mainImg} alt="bg4" />
+-        <p>
+-          <b>Location:</b>- {location}
+-        </p>
+-        <Button className="">View</Button>
+-      </div>
+-    </div>
+-  );
+-}
+ 
+-export default TurfListMain;
++export default class TurfListMain extends Component {
++  render(){
++    const {mainImg, name, location} = this.props;
++    return (
++      <div>
++        <div className="Turf">
++          <h2>{this.props.name}</h2>
++          <img width="400px" src={this.props.mainImg} alt="bg4" />
++          <p>
++            <b>Location:</b>- {this.props.location}
++          </p>
++          <Button className="" onClick={()=>this.props.handleViewClick(mainImg, name, location)}>View</Button>
++        </div>
++      </div>
++    );
++  }
++}
+\ No newline at end of file
